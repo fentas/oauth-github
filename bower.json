@@ -1,0 +1,9 @@
+{
+  "name": "oauth-github",
+  "private": true,
+  "dependencies": {
+    "polymer": "Polymer/polymer#master",
+    "core-localstorage": "Polymer/core-localstorage#master",
+    "oauth-buttons": "fentas/oauth-buttons#master"
+  }
+}
