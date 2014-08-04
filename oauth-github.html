@@ -6,7 +6,7 @@ Copyright (c) 2014 muiis Authors. All rights reserved.
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../o-auth/o-auth.html">
 
-<polymer-element name="oauth-github" attributes="client scope code">
+<polymer-element name="oauth-github" attributes="client scope code save">
   <template>
     <link rel="stylesheet" href="../oauth-buttons/sign-in.css">
     <link rel="stylesheet" href="../oauth-buttons/github/sign-in.base64.css">
@@ -17,6 +17,7 @@ Copyright (c) 2014 muiis Authors. All rights reserved.
       client="{{client}}"
       params="scope={{scope}}"
       code="{{code}}"
+      save="{{save}}"
       listen="oauth=github"
       width="1030"
       height="618"></o-auth>
@@ -27,7 +28,15 @@ Copyright (c) 2014 muiis Authors. All rights reserved.
     Polymer('oauth-github', {
 
       ready: function() {
-
+        var listen = function(_this, event) {
+          this.addEventListener(event, function(e) {
+            _this.fire(event, e.detail);
+          });
+        }.bind(this.$.oauth, this);
+        listen('success');
+        listen('error');
+        listen('opened');
+        listen('closed');
       },
 
       domReady: function() {
