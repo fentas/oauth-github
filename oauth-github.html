@@ -4,78 +4,30 @@ Copyright (c) 2014 muiis Authors. All rights reserved.
 -->
 
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../core-localstorage/core-localstorage.html">
+<link rel="import" href="../o-auth/o-auth.html">
 
-<polymer-element name="oauth-github" attributes="client code redirect">
+<polymer-element name="oauth-github" attributes="client scope code">
   <template>
     <link rel="stylesheet" href="../oauth-buttons/sign-in.css">
     <link rel="stylesheet" href="../oauth-buttons/github/sign-in.base64.css">
     <content on-click="{{oauth}}" id="content"></content>
-    <core-localstorage name="code" value="{{code}}"></core-localstorage>
+    <o-auth
+      id="oauth"
+      service="https://github.com/login/oauth/authorize"
+      client="{{client}}"
+      params="scope={{scope}}"
+      code="{{code}}"
+      listen="oauth=github"
+      width="1030"
+      height="618"></o-auth>
   </template>
   <script>
   (function() {
 
-    // Polyfill crypto.getRandomValues
-    if ( typeof window.crypto === 'undefined' )
-      window.crypto = {};
-    if ( typeof window.crypto.getRandomValues === 'undefined' ) {
-      window.crypto.getRandomValues = function(typedArray) {
-        for ( var i = 0 ; i < typedArray.length ; i++ )
-          typedArray[i] = Math.floor(Math.random() * Math.pow(2, 8 * typedArray.BYTES_PER_ELEMENT));
-      };
-    }
-
-    var csrf = {
-      token: null,
-      create: function() {
-        var tmp = new Uint16Array(1);
-        window.crypto.getRandomValues(tmp);
-        return ( this.token = btoa(tmp[0].toString(2)) );
-      }
-    };
-
     Polymer('oauth-github', {
-      code: '',
-      redirect: 'oauth=github',
 
-      popup: null,
+      ready: function() {
 
-      observe: {
-        'popup.closed': 'popupClosed'
-      },
-
-      created: function() {
-        // get query string
-        var qString = function(string) {
-          if ( typeof string !== 'string' ) return string;
-          var tmp = {};
-          string.replace(/(?:\?|&|^)(.+?)=([^&]+)/g, function(d, s, k, v) { this[d(k)] = d(v); }.bind(tmp, decodeURIComponent));
-          return tmp;
-        }, query = qString(location.search);
-        this.redirect = qString(this.redirect);
-
-        // if this is popup + compare redirect pattern with query string
-        if ( window.opener && (function(s, q) { for(var k in s) if(q[k]!==s[k]) return false; }(this.redirect, query)) ) {
-          window.opener.postMessage(query, window.location);
-          window.close();
-        }
-        else {
-          // listen for popup message
-          window.addEventListener('message', function (event) {
-            this.popup = null;
-
-            if ( event.data.state === csrf.token ) {
-              this.code = event.data.code;
-
-              this.fire('login', {code: this.code});
-            }
-            else {
-              // potential cross side scripting... ~ error
-              this.fire('csrf', {send: csrf.token, recived: event.data.state});
-            }
-          }.bind(this));
-        }
       },
 
       domReady: function() {
@@ -85,23 +37,9 @@ Copyright (c) 2014 muiis Authors. All rights reserved.
       },
 
       oauth: function() {
-        this.popup = window.open('https://github.com/login/oauth/authorize' +
-          '?client_id=' + this.client +
-          '&scope=' + this.scope +
-          '&redirect_uri=' +
-            window.location.protocol + '//' +
-            window.location.host +
-            window.location.pathname + '?' +
-            // create query string of redirect pattern
-            Object.keys(this.redirect).reduce(function(a,k){a.push(k+'='+encodeURIComponent(this.redirect[k]));return a;}.bind(this),[]).join('&') +
-          '&state=' + csrf.create(), 'oauth-github', 'height=500,width=600');
-      },
-
-      popupClosed: function(oval, nval) {
-        if ( nval ) {
-          this.fire('closed');
-        }
+        this.$.oauth.oauth();
       }
+
     });
 
   })();
