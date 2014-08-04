@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "polymer": "Polymer/polymer#master",
-    "oauth-buttons": "mui-is/o-auth#master",
+    "o-auth": "mui-is/o-auth#master",
     "oauth-buttons": "fentas/oauth-buttons#master"
   }
 }
